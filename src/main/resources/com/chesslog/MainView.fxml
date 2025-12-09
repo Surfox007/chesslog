@@ -1,31 +1,130 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.scene.control.Label?>
-<?import javafx.scene.layout.BorderPane?>
+
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.control.SplitPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.control.TabPane?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.ToggleButton?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<SplitPane dividerPositions="0.65" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.chesslog.MainController">
+    <VBox fx:id="boardContainer" alignment="CENTER" minWidth="600" maxWidth="600">
+        <Label text="[Chess Board Placeholder]" style="-fx-font-size: 24;"/>
+    </VBox>
 
-<BorderPane fx:id="rootPane" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="com.chesslog.MainController" stylesheets="@styles.css">
+    <VBox fx:id="controlPanel">
+        <HBox alignment="CENTER_LEFT" spacing="10" style="-fx-padding: 10;">
+            <Label text="ChessLog" styleClass="app-logo"/>
 
-    <left>
-        <VBox fx:id="sidebar" styleClass="sidebar">
-            <VBox styleClass="sidebar-header">
-                <Label text="♟️ ChessLog" styleClass="app-logo"/>
-            </VBox>
-            <VBox fx:id="navMenu" spacing="10" styleClass="nav-menu">
-                <Label text="🏠 Analysis" styleClass="nav-item"/>
-                <Label text="📋 My Repertoire" styleClass="nav-item"/>
-                <Label text="📊 Search" styleClass="nav-item"/>
-                <Label text="⚙️ Settings" styleClass="nav-item"/>
-            </VBox>
-        </VBox>
-    </left>
+            <Region HBox.hgrow="ALWAYS"/> <Button fx:id="settingsButton">
+            <graphic>
+                <ImageView fitHeight="20" fitWidth="20">
+                    <image>
+                        <Image url="@../../images/settings_gear.png"/>
+                    </image>
+                </ImageView>
+            </graphic>
+        </Button>
+        </HBox>
 
-    <center>
-        <AnchorPane styleClass="main-content">
-            <Label text="This is where your Game History and Board will appear." styleClass="content-placeholder"/>
-        </AnchorPane>
-    </center>
+        <TabPane side="TOP" tabClosingPolicy="UNAVAILABLE" VBox.vgrow="ALWAYS" style="-fx-padding: 0;">
 
-</BorderPane>
+            <Tab text="Analysis">
+                <content>
+                    <AnchorPane>
+                        <VBox alignment="TOP_CENTER" spacing="10" AnchorPane.topAnchor="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.leftAnchor="10.0" AnchorPane.bottomAnchor="10.0">
+
+                            <HBox alignment="CENTER_LEFT" spacing="10">
+                                <Label text="Stockfish" style="-fx-font-weight: bold;"/>
+                                <ToggleButton fx:id="stockfishToggle"/>
+                            </HBox>
+
+                            <TextArea fx:id="analysisOutputArea" editable="false" promptText="Engine Analysis (e.g., +0.5, best move, depth)" VBox.vgrow="ALWAYS" minHeight="120"/>
+
+                            <TextArea fx:id="moveListArea" editable="false" promptText="Move History (1. e4 e5 2. Nf3 Nc6...)" VBox.vgrow="ALWAYS" minHeight="120"/>
+
+                            <HBox alignment="CENTER" spacing="15">
+                                <Button fx:id="firstMoveButton" text="⇤" style="-fx-font-size: 18px;"/>
+                                <Button fx:id="prevMoveButton" text="&lt;" style="-fx-font-size: 18px;"/>
+                                <Button fx:id="nextMoveButton" text="&gt;" style="-fx-font-size: 18px;"/>
+                                <Button fx:id="lastMoveButton" text="⇥" style="-fx-font-size: 18px;"/>
+
+                                <Region HBox.hgrow="ALWAYS"/> <Button text="⮀" style="-fx-font-size: 18px;"/> <Button text="🔍" style="-fx-font-size: 18px;"/> <Button text="⟲" style="-fx-font-size: 18px;"/> </HBox>
+
+                            <HBox alignment="CENTER" spacing="20" style="-fx-padding: 10 0 0 0;">
+                                <Button fx:id="deleteButton" text="Delete" style="-fx-background-color: #c62828; -fx-text-fill: white; -fx-padding: 8 30; -fx-font-weight: bold;"/>
+                                <Button fx:id="saveButton" text="Save" style="-fx-background-color: #388e3c; -fx-text-fill: white; -fx-padding: 8 30; -fx-font-weight: bold;"/>
+                            </HBox>
+
+                        </VBox>
+                    </AnchorPane>
+                </content>
+            </Tab>
+
+            <Tab text="Load">
+                <content>
+                    <AnchorPane>
+                        <TabPane side="TOP" tabClosingPolicy="UNAVAILABLE" AnchorPane.topAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.bottomAnchor="0.0">
+
+                            <Tab text="Your Collections">
+                                <content>
+                                    <VBox spacing="10" style="-fx-padding: 10;">
+
+                                        <HBox alignment="CENTER_LEFT" spacing="5">
+                                            <Label text="🔍" style="-fx-font-size: 16px;"/>
+                                            <TextField fx:id="collectionSearchField" promptText="Search your saved games..." HBox.hgrow="ALWAYS"/>
+                                        </HBox>
+
+                                        <TableView fx:id="savedGamesTable" VBox.vgrow="ALWAYS">
+                                            <placeholder>
+                                                <Label text="No saved analyses found."/>
+                                            </placeholder>
+                                        </TableView>
+
+                                        <HBox alignment="CENTER_RIGHT">
+                                            <Label text="1 / 4"/> <Button text="&lt;"/>
+                                            <Button text="1"/>
+                                            <Button text="2"/>
+                                            <Button text="..."/>
+                                            <Button text="&gt;"/>
+                                        </HBox>
+
+                                    </VBox>
+                                </content>
+                            </Tab>
+
+                            <Tab text="Import">
+                                <content>
+                                    <VBox spacing="10" style="-fx-padding: 10;">
+                                        <Label text="Import Games from Chess.com User" style="-fx-font-weight: bold;"/>
+
+                                        <HBox spacing="5" alignment="CENTER_LEFT">
+                                            <TextField fx:id="usernameField" promptText="Enter Chess.com Username" HBox.hgrow="ALWAYS"/>
+                                            <Button fx:id="importButton" text="Fetch Games"/>
+                                        </HBox>
+
+                                        <TableView fx:id="importedGamesTable" VBox.vgrow="ALWAYS">
+                                            <placeholder>
+                                                <Label text="Enter a username and click 'Fetch Games'."/>
+                                            </placeholder>
+                                        </TableView>
+
+                                    </VBox>
+                                </content>
+                            </Tab>
+                        </TabPane>
+                    </AnchorPane>
+                </content>
+            </Tab>
+        </TabPane>
+    </VBox>
+</SplitPane>

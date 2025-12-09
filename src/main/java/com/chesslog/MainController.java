@@ -1,29 +1,70 @@
 package com.chesslog;
 
 import javafx.fxml.FXML;
-import javafx.scene.control.Label;
+import javafx.scene.control.*;
+
 import javafx.scene.layout.VBox;
 
 public class MainController {
 
-    @FXML private VBox sidebar;
-    @FXML private VBox navMenu;
+    @FXML
+    private VBox boardContainer;
 
     @FXML
-    public void initialize() {
-        // Initialization logic (e.g., setting up event handlers) can go here
-        System.out.println("MainController initialized.");
+    private Button settingsButton;
 
-        // Add click handlers or hover effects dynamically if needed
-        navMenu.getChildren().forEach(node -> {
-            if (node instanceof Label) {
-                Label item = (Label) node;
-                // Add a simple click/selection effect
-                item.setOnMouseClicked(event -> {
-                    System.out.println("Clicked: " + item.getText());
-                    // Logic to switch the center view goes here
-                });
-            }
-        });
+    @FXML
+    private ToggleButton stockfishToggle;
+
+    @FXML
+    private TextArea analysisOutputArea;
+
+    @FXML
+    private TextArea moveListArea;
+
+    @FXML private Button firstMoveButton;
+    @FXML private Button prevMoveButton;
+    @FXML private Button nextMoveButton;
+    @FXML private Button lastMoveButton;
+
+    // Save/Delete Buttons
+    @FXML private Button deleteButton;
+    @FXML private Button saveButton;
+
+    // Load Tab Controls
+    @FXML
+    private TextField collectionSearchField;
+
+    @FXML
+    private TableView savedGamesTable; // Generic TableView for now
+
+    @FXML
+    private TextField usernameField;
+
+    @FXML
+    private Button importButton;
+
+    @FXML
+    private TableView importedGamesTable; // Generic TableView for now
+    @FXML
+    public void initialize() {
+        // ... existing initialization logic ...
+
+        // Example: Link Save/Delete buttons (implementation comes later)
+        if (saveButton != null) {
+            saveButton.setOnAction(e -> System.out.println("Save analysis clicked."));
+        }
+        if (deleteButton != null) {
+            deleteButton.setOnAction(e -> System.out.println("Delete analysis clicked."));
+        }
+        if (importButton != null) {
+            importButton.setOnAction(e -> System.out.println("Fetching games for user: " + usernameField.getText()));
+        }
+    }
+    // Example handler for settings button
+    @FXML
+    private void handleSettings() {
+        System.out.println("Settings button clicked!");
+        // Logic to open settings window
     }
 }
