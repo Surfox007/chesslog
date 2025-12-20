@@ -9,26 +9,20 @@ import java.sql.Statement;
 public class DatabaseService {
 
     private static final String DB_NAME = "chesslog.db";
-    // JDBC URL for SQLite: jdbc:sqlite:/path/to/database.db
+
     private static final String JDBC_URL = "jdbc:sqlite:" + DB_NAME;
 
-    /**
-     * Establishes a connection to the SQLite database. Creates the database file
-     * if it does not exist.
-     * @return A valid Connection object.
-     * @throws SQLException if a database access error occurs.
-     */
+
     public static Connection getConnection() throws SQLException {
-        // SQLite will automatically create the file if it doesn't exist
+
         return DriverManager.getConnection(JDBC_URL);
     }
 
-    //Initializes the database schema (creates tables if they don't exist)
+
     public static void initializeDatabase() {
         try (Connection conn = getConnection();
              Statement stmt = conn.createStatement()) {
 
-            // SQL to create the Games table.
             String sql = """
                 CREATE TABLE IF NOT EXISTS games (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,

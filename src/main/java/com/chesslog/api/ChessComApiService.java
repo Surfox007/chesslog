@@ -5,9 +5,17 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
+import com.github.bhlangonijr.chesslib.pgn.PgnHolder; // Import PgnHolder from chesslib
+import com.github.bhlangonijr.chesslib.game.Game; // Import chesslib's Game class for parsing PGN
+
 import java.io.IOException;
+import java.io.StringReader;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 //Service to fetch PGN archives from the Chess.com Public API using OkHttp and Gson.
 public class ChessComApiService {
@@ -15,12 +23,8 @@ public class ChessComApiService {
     private final OkHttpClient client = new OkHttpClient();
     private final Gson gson = new Gson();
     private static final String API_BASE_URL = "https://api.chess.com/pub/player/";
+    private final ExecutorService executorService = Executors.newFixedThreadPool(5); // For parallel fetching
 
-    /**
-     * Fetches all monthly archive URLs for a given Chess.com username.
-     * @param username The Chess.com username.
-     * @return A list of monthly archive URLs.
-     */
     public List<String> fetchArchiveUrls(String username) {
         String url = API_BASE_URL + username.toLowerCase() + "/games/archives";
 
@@ -43,12 +47,8 @@ public class ChessComApiService {
         }
     }
 
-    /**
-     * Fetches all games from a single monthly archive URL.
-     * @param archiveUrl The URL of the monthly archive (e.g., .../2023/01).
-     * @return A list of Game objects containing the raw PGN.
-     */
-    public List<Game> fetchGamesFromArchive(String archiveUrl) {
+
+    public List<ChessGame> fetchGamesFromArchive(String archiveUrl) {
         Request request = new Request.Builder().url(archiveUrl).build();
 
         try (Response response = client.newCall(request).execute()) {
@@ -65,6 +65,70 @@ public class ChessComApiService {
         } catch (IOException e) {
             System.err.println("Network error fetching monthly archive: " + e.getMessage());
             return Collections.emptyList();
+        }
+    }
+
+    // New method to fetch all games for a user, parse PGNs, and populate metadata
+    public List<ChessGame> fetchAllGamesForUser(String username) {
+        List<String> archiveUrls = fetchArchiveUrls(username);
+        if (archiveUrls.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        // Only fetch the most recent archive
+        String lastArchiveUrl = archiveUrls.get(archiveUrls.size() - 1);
+        List<ChessGame> games = fetchGamesFromArchive(lastArchiveUrl);
+
+        // Limit to the last 20 games
+        if (games.size() > 20) {
+            games = games.subList(games.size() - 20, games.size());
+        }
+
+        for (ChessGame chessGame : games) {
+            parsePgnMetadata(chessGame); // Populate ChessGame fields
+        }
+
+        return games;
+    }
+
+    private void parsePgnMetadata(ChessGame chessGame) {
+        if (chessGame.getPgn() == null || chessGame.getPgn().isEmpty()) {
+            return;
+        }
+
+        PgnHolder pgnHolder = new PgnHolder("dummy.pgn");
+        pgnHolder.loadPgn(chessGame.getPgn());
+
+        try {
+            if (!pgnHolder.getGames().isEmpty()) {
+                Game gameFromPgn = pgnHolder.getGames().get(0);
+                System.out.println("--- Parsing PGN ---");
+                if (gameFromPgn.getRound() != null && gameFromPgn.getRound().getEvent() != null) {
+                    chessGame.event = gameFromPgn.getRound().getEvent().getName();
+                    chessGame.site = gameFromPgn.getRound().getEvent().getSite();
+                    System.out.println("Event: " + chessGame.event);
+                    System.out.println("Site: " + chessGame.site);
+                }
+                chessGame.date = gameFromPgn.getDate();
+                System.out.println("Date: " + chessGame.date);
+
+                if (gameFromPgn.getWhitePlayer() != null) {
+                    chessGame.whitePlayerName = gameFromPgn.getWhitePlayer().getName();
+                    System.out.println("White: " + chessGame.whitePlayerName);
+                }
+                if (gameFromPgn.getBlackPlayer() != null) {
+                    chessGame.blackPlayerName = gameFromPgn.getBlackPlayer().getName();
+                    System.out.println("Black: " + chessGame.blackPlayerName);
+                }
+                if (gameFromPgn.getResult() != null) {
+                    chessGame.result = gameFromPgn.getResult().getDescription();
+                    System.out.println("Result: " + chessGame.result);
+                }
+                System.out.println("--------------------");
+            }
+        } catch (Exception e) {
+            System.err.println("Error parsing PGN: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 }

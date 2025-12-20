@@ -6,9 +6,9 @@ import com.google.gson.annotations.SerializedName;
 public class MonthlyArchive {
 
     @SerializedName("games")
-    public List<Game> games;
+    public List<ChessGame> games;
 
-    public List<Game> getGames() {
+    public List<ChessGame> getGames() {
         return games;
     }
 }

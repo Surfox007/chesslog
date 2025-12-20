@@ -1,7 +1,7 @@
 package com.chesslog;
 
 import com.chesslog.api.ChessComApiService;
-import com.chesslog.api.Game;
+import com.chesslog.api.ChessGame;
 import com.chesslog.database.DatabaseService;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -31,7 +31,7 @@ public class MainApplication extends Application {
             // 2. Fetch games from the MOST RECENT archive (to limit the load)
             if (!urls.isEmpty()) {
                 String latestUrl = urls.get(urls.size() - 1);
-                List<Game> games = apiService.fetchGamesFromArchive(latestUrl);
+                List<ChessGame> games = apiService.fetchGamesFromArchive(latestUrl);
                 System.out.println("Fetched " + games.size() + " games from latest archive: " + latestUrl);
             }
         } catch (Exception e) {
