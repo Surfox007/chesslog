@@ -8,7 +8,7 @@ module com.chesslog.desktop {
     requires com.google.gson;
 
     // ChessLib dependency (if confirmed to be working)
-    // requires chesslib;
+    requires chesslib;
 
     // Open packages for reflection access
     opens com.chesslog to javafx.fxml;

@@ -36,7 +36,7 @@
         </Button>
         </HBox>
 
-        <TabPane side="TOP" tabClosingPolicy="UNAVAILABLE" VBox.vgrow="ALWAYS" style="-fx-padding: 0;">
+        <TabPane fx:id="mainTabPane" side="TOP" tabClosingPolicy="UNAVAILABLE" VBox.vgrow="ALWAYS" style="-fx-padding: 0;">
 
             <Tab text="Analysis">
                 <content>
