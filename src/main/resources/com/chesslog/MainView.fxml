@@ -16,9 +16,20 @@
 <?import javafx.scene.control.TextArea?>
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.ProgressBar?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.text.TextFlow?>
 <SplitPane dividerPositions="0.65" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.chesslog.MainController">
-    <VBox fx:id="boardContainer" alignment="CENTER" minWidth="600" maxWidth="600">
-        <Label text="[Chess Board Placeholder]" style="-fx-font-size: 24;"/>
+    <VBox fx:id="boardContainer" alignment="CENTER" minWidth="600" maxWidth="600" spacing="10" style="-fx-padding: 10;">
+        <HBox alignment="CENTER_LEFT" spacing="10">
+            <Label fx:id="blackPlayerIcon" style="-fx-font-size: 24px;"/>
+            <Label fx:id="blackPlayerNameLabel" style="-fx-font-weight: bold; -fx-font-size: 16px;"/>
+        </HBox>
+        <!-- Chessboard will be inserted here dynamically -->
+        <HBox alignment="CENTER_LEFT" spacing="10">
+            <Label fx:id="whitePlayerIcon" style="-fx-font-size: 24px;"/>
+            <Label fx:id="whitePlayerNameLabel" style="-fx-font-weight: bold; -fx-font-size: 16px;"/>
+        </HBox>
     </VBox>
 
     <VBox fx:id="controlPanel">
@@ -48,9 +59,30 @@
                                 <ToggleButton fx:id="stockfishToggle"/>
                             </HBox>
 
-                            <TextArea fx:id="analysisOutputArea" editable="false" promptText="Engine Analysis (e.g., +0.5, best move, depth)" VBox.vgrow="ALWAYS" minHeight="120"/>
+                            <VBox fx:id="analysisOutputArea" styleClass="analysis-box" spacing="5" VBox.vgrow="ALWAYS" minHeight="120">
+                                <HBox alignment="CENTER_LEFT" spacing="10">
+                                    <Label text="Evaluation:" styleClass="analysis-label"/>
+                                    <Label fx:id="evaluationLabel" styleClass="evaluation-score"/>
+                                </HBox>
+                                <HBox alignment="CENTER_LEFT" spacing="10">
+                                    <Label text="Depth:" styleClass="analysis-label"/>
+                                    <Label fx:id="depthLabel" styleClass="evaluation-score"/>
+                                </HBox>
+                                <HBox alignment="CENTER_LEFT" spacing="10">
+                                    <Label text="Best Move:" styleClass="analysis-label"/>
+                                    <Label fx:id="bestMoveLabel" styleClass="best-move"/>
+                                </HBox>
+                                <Label text="Next Moves:" styleClass="analysis-label"/>
+                                <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS">
+                                    <VBox fx:id="engineMovesVBox" spacing="2"/>
+                                </ScrollPane>
+                            </VBox>
 
-                            <TextArea fx:id="moveListArea" editable="false" promptText="Move History (1. e4 e5 2. Nf3 Nc6...)" VBox.vgrow="ALWAYS" minHeight="120"/>
+                            <ScrollPane fx:id="moveListScrollPane" styleClass="move-list-scroll-pane" fitToWidth="true" VBox.vgrow="ALWAYS" minHeight="120">
+                                <content>
+                                    <TextFlow fx:id="moveListArea"/>
+                                </content>
+                            </ScrollPane>
 
                             <HBox alignment="CENTER" spacing="15">
                                 <Button fx:id="firstMoveButton" text="⇤" style="-fx-font-size: 18px;"/>
@@ -58,12 +90,12 @@
                                 <Button fx:id="nextMoveButton" text="&gt;" style="-fx-font-size: 18px;"/>
                                 <Button fx:id="lastMoveButton" text="⇥" style="-fx-font-size: 18px;"/>
 
-                                <Region HBox.hgrow="ALWAYS"/> <Button text="⮀" style="-fx-font-size: 18px;"/> <Button text="🔍" style="-fx-font-size: 18px;"/> <Button text="⟲" style="-fx-font-size: 18px;"/> </HBox>
+                                                                <ToggleButton fx:id="saveStarButton" text="☆" style="-fx-font-size: 18px;"/>
+                                <Button text="🔍" style="-fx-font-size: 18px;"/>
+                                <Button text="⟲" style="-fx-font-size: 18px;"/> </HBox>
 
-                            <HBox alignment="CENTER" spacing="20" style="-fx-padding: 10 0 0 0;">
-                                <Button fx:id="deleteButton" text="Delete" style="-fx-background-color: #c62828; -fx-text-fill: white; -fx-padding: 8 30; -fx-font-weight: bold;"/>
-                                <Button fx:id="saveButton" text="Save" style="-fx-background-color: #388e3c; -fx-text-fill: white; -fx-padding: 8 30; -fx-font-weight: bold;"/>
-                            </HBox>
+
+
 
                         </VBox>
                     </AnchorPane>

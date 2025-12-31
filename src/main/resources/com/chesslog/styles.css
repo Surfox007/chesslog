@@ -58,3 +58,52 @@
     -fx-font-size: 18px;
     -fx-padding: 20px;
 }
+
+/* Analysis Section */
+.analysis-box {
+    -fx-background-color: #FAFAFA;
+    -fx-padding: 10px;
+    -fx-border-color: #E0E0E0;
+    -fx-border-width: 1px;
+    -fx-border-radius: 5px;
+    -fx-background-radius: 5px;
+}
+
+.analysis-label {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #555;
+}
+
+.evaluation-score {
+    -fx-font-size: 14px;
+    -fx-font-family: "Consolas", "Monaco", monospace;
+}
+
+.best-move {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-font-family: "Consolas", "Monaco", monospace;
+}
+
+.evaluation-bar .bar {
+    -fx-background-color: linear-gradient(to right, #B58863, #F0D9B5);
+    -fx-padding: 8px; /* Makes the bar thicker */
+}
+.evaluation-bar .track {
+    -fx-background-color: #E0E0E0;
+}
+
+/* Move List (TextFlow) */
+.move-list-scroll-pane {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #E0E0E0;
+    -fx-border-width: 1px;
+    -fx-border-radius: 5px;
+    -fx-background-radius: 5px;
+}
+
+.move-number {
+    -fx-font-weight: bold;
+    -fx-fill: #333; /* Darker color for move numbers */
+}
