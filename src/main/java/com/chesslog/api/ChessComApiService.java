@@ -68,7 +68,7 @@ public class ChessComApiService {
         }
     }
 
-    // New method to fetch all games for a user, parse PGNs, and populate metadata
+
     public List<ChessGame> fetchAllGamesForUser(String username) {
         List<String> archiveUrls = fetchArchiveUrls(username);
         if (archiveUrls.isEmpty()) {
