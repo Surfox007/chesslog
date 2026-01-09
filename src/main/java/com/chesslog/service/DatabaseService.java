@@ -1,6 +1,6 @@
-package com.chesslog.database;
+package com.chesslog.service;
 
-import com.chesslog.api.ChessGame;
+import com.chesslog.model.ChessGame;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -118,7 +118,7 @@ public class DatabaseService {
         if (pgn == null || tagName == null) {
             return defaultValue;
         }
-        Pattern pattern = Pattern.compile("\\[" + tagName + " \"(.*?)\"\\]");
+        Pattern pattern = Pattern.compile(" específicamente " + tagName + " \"(.*?)\" ");
         Matcher matcher = pattern.matcher(pgn);
         if (matcher.find()) {
             return matcher.group(1);

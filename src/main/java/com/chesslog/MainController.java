@@ -1,9 +1,10 @@
 package com.chesslog;
 
-import com.chesslog.api.ChessComApiService;
-import com.chesslog.api.ChessGame;
-import com.chesslog.api.Stockfish;
-import com.chesslog.database.DatabaseService;
+import com.chesslog.model.AnalysisLine;
+import com.chesslog.service.ChessComApiService;
+import com.chesslog.model.ChessGame;
+import com.chesslog.service.StockfishApiService;
+import com.chesslog.service.DatabaseService;
 import com.github.bhlangonijr.chesslib.Board;
 import com.github.bhlangonijr.chesslib.move.MoveList;
 import javafx.beans.property.BooleanProperty;
@@ -12,13 +13,16 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -37,19 +41,10 @@ public class MainController {
     private ToggleButton stockfishToggle;
 
     @FXML
-    private VBox analysisOutputArea;
-
-    @FXML
-    private Label evaluationLabel;
-
-    @FXML
-    private Label bestMoveLabel;
-
-    @FXML
     private Label depthLabel;
 
     @FXML
-    private VBox engineMovesVBox;
+    private ListView<AnalysisLine> engineMovesListView;
 
     @FXML
     private TextFlow moveListArea;
@@ -84,15 +79,15 @@ public class MainController {
 
     private final ChessComApiService chessComApiService = new ChessComApiService();
     private final DatabaseService databaseService = new DatabaseService();
-    private final Stockfish stockfish = new Stockfish();
+    private final StockfishApiService stockfishApiService = new StockfishApiService();
     private final BooleanProperty isStockfishRunning = new SimpleBooleanProperty(false);
-    private Thread stockfishAnalysisThread;
 
     private ChessGame currentlyLoadedGame;
     private Board board;
     private MoveList moveList;
     private int currentMoveIndex = -1;
     private Chessboard chessboard;
+    private List<Text> moveTextNodes = new ArrayList<>();
 
     @FXML
     public void initialize() {
@@ -124,11 +119,11 @@ public class MainController {
             lastMoveButton.setOnAction(e -> handleLastMove());
         }
 
-        // Initialize the chessboard and add it to the container
+        this.board = new Board();
         chessboard = new Chessboard();
+        chessboard.setBoard(this.board);
+
         if (boardContainer != null) {
-            // The VBox contains the two HBoxes for player info.
-            // We add the chessboard between them.
             boardContainer.getChildren().add(1, chessboard);
         }
         clearPlayerInfo();
@@ -136,17 +131,68 @@ public class MainController {
         setupSavedGamesTable();
         loadSavedGames();
         updateSaveStarState();
+        updateNavigationButtonsState();
 
         if (stockfishToggle != null) {
             stockfishToggle.selectedProperty().bindBidirectional(isStockfishRunning);
             isStockfishRunning.addListener((obs, oldVal, newVal) -> {
                 if (newVal) {
-                    startStockfishAnalysis();
+                    analyzeCurrentPosition();
                 } else {
-                    stopStockfishAnalysis();
+                    clearAnalysis();
                 }
             });
         }
+
+        setupEngineMovesListView();
+    }
+
+    private void setupEngineMovesListView() {
+        if (engineMovesListView == null) return;
+
+        engineMovesListView.setCellFactory(param -> new ListCell<>() {
+            @Override
+            protected void updateItem(AnalysisLine line, boolean empty) {
+                super.updateItem(line, empty);
+                if (empty || line == null) {
+                    setText(null);
+                    setGraphic(null);
+                } else {
+                    HBox container = new HBox(10);
+                    container.setAlignment(Pos.CENTER_LEFT);
+
+                    Label scoreLabel = new Label(line.getFormattedEvaluation());
+                    scoreLabel.getStyleClass().add("engine-score-badge");
+                    
+                    // Determine color based on score
+                    try {
+                        double eval = Double.parseDouble(line.getEvaluation());
+                        if (eval > 0.5) {
+                            scoreLabel.setStyle("-fx-background-color: #769656; -fx-text-fill: white;");
+                        } else if (eval < -0.5) {
+                            scoreLabel.setStyle("-fx-background-color: #b33434; -fx-text-fill: white;");
+                        } else {
+                            scoreLabel.setStyle("-fx-background-color: #808080; -fx-text-fill: white;");
+                        }
+                    } catch (Exception e) {
+                        if (line.isMate()) {
+                            scoreLabel.setStyle("-fx-background-color: #000000; -fx-text-fill: white;");
+                        }
+                    }
+
+                    Label bestMoveLabel = new Label(line.getBestMove());
+                    bestMoveLabel.setStyle("-fx-font-weight: bold;");
+
+                    Label continuationLabel = new Label(line.getContinuation());
+                    continuationLabel.setStyle("-fx-text-fill: grey; -fx-font-size: 11px;");
+                    continuationLabel.setWrapText(true);
+                    HBox.setHgrow(continuationLabel, Priority.ALWAYS);
+
+                    container.getChildren().addAll(scoreLabel, bestMoveLabel, continuationLabel);
+                    setGraphic(container);
+                }
+            }
+        });
     }
 
     private void clearPlayerInfo() {
@@ -252,6 +298,7 @@ public class MainController {
     }
 
     private void loadGame(ChessGame gameToLoad) {
+
         this.currentlyLoadedGame = gameToLoad;
         this.board = new Board();
         this.moveList = new MoveList();
@@ -263,7 +310,6 @@ public class MainController {
         if (whitePlayerNameLabel != null) {
             whitePlayerNameLabel.setText(gameToLoad.getWhitePlayerName());
         }
-
 
         String pgn = currentlyLoadedGame.getPgn();
         if (pgn == null || pgn.isEmpty()) {
@@ -298,14 +344,14 @@ public class MainController {
             updateBoardView();
             updateSaveStarState();
             updateMoveListArea();
+            updateNavigationButtonsState();
+
 
             if (mainTabPane != null) {
                 mainTabPane.getSelectionModel().select(0);
             }
             if (isStockfishRunning.get()) {
-                // Restart analysis for new game
-                stopStockfishAnalysis();
-                startStockfishAnalysis();
+                analyzeCurrentPosition();
             }
 
         } catch (Exception e) {
@@ -319,27 +365,83 @@ public class MainController {
             return;
         }
         moveListArea.getChildren().clear();
-        String[] moves = moveList.toSan().split(" ");
-        int moveCounter = 1;
-        boolean isWhiteMove = true;
+        moveTextNodes.clear();
 
-        for (int i = 0; i < moves.length; i++) {
-            if (Character.isDigit(moves[i].charAt(0))) {
-                Text moveNumber = new Text(moves[i] + " ");
+        String san = moveList.toSan();
+
+        if (san == null || san.trim().isEmpty()) {
+            return;
+        }
+
+        String[] moves = san.trim().split("\\s+");
+        
+        int moveIndex = 0;
+        for (String moveToken : moves) {
+            if (moveToken.isEmpty()) {
+                continue;
+            }
+
+            if (Character.isDigit(moveToken.charAt(0))) {
+                Text moveNumber = new Text(moveToken + " ");
                 moveNumber.getStyleClass().add("move-number");
                 moveListArea.getChildren().add(moveNumber);
-                isWhiteMove = true;
             } else {
-                Text move = new Text(moves[i] + " ");
+                Text move = new Text(moveToken + " ");
+                final int index = moveIndex;
+                move.setOnMouseClicked(event -> navigateToMove(index));
+                move.getStyleClass().add("move-text");
                 moveListArea.getChildren().add(move);
-                isWhiteMove = !isWhiteMove;
+                moveTextNodes.add(move);
+                moveIndex++;
+            }
+        }
+        highlightCurrentMoveInTextFlow();
+    }
+
+    private void navigateToMove(int moveIndex) {
+        if (moveList == null || moveIndex < -1 || moveIndex >= moveList.size()) {
+            // Special case for going to start of game
+            if (moveIndex == -1) {
+                board.loadFromFen(moveList.getStartFen());
+                currentMoveIndex = -1;
+                updateBoardView();
+                updateStockfishAnalysisIfRunning();
+                updateNavigationButtonsState();
+                highlightCurrentMoveInTextFlow();
+            }
+            return;
+        }
+
+        board.loadFromFen(moveList.getStartFen());
+        for (int i = 0; i <= moveIndex; i++) {
+            board.doMove(moveList.get(i));
+        }
+        currentMoveIndex = moveIndex;
+        updateBoardView();
+        updateStockfishAnalysisIfRunning();
+        updateNavigationButtonsState();
+        highlightCurrentMoveInTextFlow();
+    }
+
+    private void highlightCurrentMoveInTextFlow() {
+        for (int i = 0; i < moveTextNodes.size(); i++) {
+            Text moveText = moveTextNodes.get(i);
+            moveText.getStyleClass().remove("current-move");
+            if (i == currentMoveIndex) {
+                moveText.getStyleClass().add("current-move");
+
+                // Animation idea: A simple fade transition
+                javafx.animation.FadeTransition ft = new javafx.animation.FadeTransition(javafx.util.Duration.millis(300), moveText);
+                ft.setFromValue(0.5);
+                ft.setToValue(1.0);
+                ft.play();
             }
         }
     }
 
     private void updateBoardView() {
         if (chessboard != null && board != null) {
-            chessboard.updateBoard(board);
+            chessboard.setBoard(board);
         }
     }
 
@@ -385,11 +487,9 @@ public class MainController {
 
         try {
             if (databaseService.isGameSaved(currentlyLoadedGame.getUrl())) {
-                // It's already saved, so "un-saving" it
                 databaseService.deleteGame(currentlyLoadedGame.getUrl());
                 showAlert("Game Removed", "Game removed from your collection.", Alert.AlertType.INFORMATION);
             } else {
-                // It's not saved, so save it
                 databaseService.saveGame(currentlyLoadedGame, username);
                 showAlert("Success", "Game saved successfully to your collection.", Alert.AlertType.INFORMATION);
             }
@@ -451,92 +551,40 @@ public class MainController {
         }
     }
 
-    private void startStockfishAnalysis() {
-        if (board == null) {
-            isStockfishRunning.set(false);
+    private void analyzeCurrentPosition() {
+        if (!isStockfishRunning.get() || board == null) {
             return;
         }
 
-        stockfish.startEngine();
-        stockfish.sendCommand("uci");
-        stockfish.getOutput(100);
-        stockfish.sendCommand("setoption name MultiPV value 10");
-
-        stockfishAnalysisThread = new Thread(() -> {
-            while (isStockfishRunning.get()) {
-                try {
-                    String fen = board.getFen();
-                    stockfish.sendCommand("position fen " + fen);
-                    stockfish.sendCommand("go depth 10");
-                    String output = stockfish.getOutput(1000);
-
-                    String bestMove = "N/A";
-                    float evalScore = 0.0f;
-                    int depth = 0;
-                    final List<String> nextMoves = new java.util.ArrayList<>();
-
-                    String[] lines = output.split("\n");
-                    for (String line : lines) {
-                        if (line.startsWith("info depth")) {
-                            try {
-                                if (line.contains("multipv 1")) {
-                                    if (line.contains("score cp ")) {
-                                        evalScore = Float.parseFloat(line.split("score cp ")[1].split(" ")[0]) / 100.0f;
-                                    } else if (line.contains("score mate ")) {
-                                        int mateIn = Integer.parseInt(line.split("score mate ")[1].split(" ")[0]);
-                                        evalScore = (mateIn > 0) ? 100.0f : -100.0f;
-                                    }
-                                    bestMove = line.split(" pv ")[1].split(" ")[0];
-                                }
-                                if (line.contains(" pv ")) {
-                                    nextMoves.add(line.split(" pv ")[1]);
-                                }
-                                depth = Integer.parseInt(line.split(" depth ")[1].split(" ")[0]);
-                            } catch (Exception e) {
-                                // Ignore parse errors
-                            }
-                        }
-                    }
-
-                    String finalBestMove = bestMove;
-                    float finalEvalScore = evalScore;
-                    int finalDepth = depth;
-
-                    javafx.application.Platform.runLater(() -> {
-                        bestMoveLabel.setText(finalBestMove);
-                        evaluationLabel.setText(String.format("%.2f", finalEvalScore));
-                        depthLabel.setText(String.valueOf(finalDepth));
-                        engineMovesVBox.getChildren().clear();
-                        for (String move : nextMoves) {
-                            engineMovesVBox.getChildren().add(new Label(move));
-                        }
-                    });
-
-                    Thread.sleep(1500);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                } catch (Exception e) {
-                    javafx.application.Platform.runLater(() -> isStockfishRunning.set(false));
+        depthLabel.setText("...");
+        
+        new Thread(() -> {
+            String fen = board.getFen();
+            List<AnalysisLine> lines = stockfishApiService.getAnalysisLines(fen);
+            
+            javafx.application.Platform.runLater(() -> {
+                if (!lines.isEmpty()) {
+                    depthLabel.setText("15"); // Assuming depth 15 as in API call
+                    
+                    ObservableList<AnalysisLine> observableLines = FXCollections.observableArrayList(lines);
+                    engineMovesListView.setItems(observableLines);
+                } else {
+                    engineMovesListView.setItems(FXCollections.emptyObservableList());
                 }
-            }
-            stockfish.stopEngine();
-        });
-        stockfishAnalysisThread.setDaemon(true);
-        stockfishAnalysisThread.start();
+            });
+        }).start();
     }
 
-    private void stopStockfishAnalysis() {
-        isStockfishRunning.set(false);
-        if (stockfishAnalysisThread != null) {
-            stockfishAnalysisThread.interrupt();
-            stockfishAnalysisThread = null;
+    private void clearAnalysis() {
+        depthLabel.setText("-");
+        if (engineMovesListView != null) {
+            engineMovesListView.setItems(FXCollections.emptyObservableList());
         }
     }
 
     private void updateStockfishAnalysisIfRunning() {
         if (isStockfishRunning.get()) {
-            stopStockfishAnalysis();
-            startStockfishAnalysis();
+            analyzeCurrentPosition();
         }
     }
 
@@ -555,36 +603,38 @@ public class MainController {
 
     private void handleFirstMove() {
         if (moveList == null || moveList.isEmpty()) return;
-        board.loadFromFen(moveList.getStartFen());
-        currentMoveIndex = -1;
-        updateBoardView();
-        updateStockfishAnalysisIfRunning();
+        navigateToMove(-1);
     }
 
     private void handlePrevMove() {
         if (moveList == null || currentMoveIndex < 0) return;
-        board.undoMove();
-        currentMoveIndex--;
-        updateBoardView();
-        updateStockfishAnalysisIfRunning();
+        navigateToMove(currentMoveIndex - 1);
     }
 
     private void handleNextMove() {
         if (moveList == null || currentMoveIndex >= moveList.size() - 1) return;
-        currentMoveIndex++;
-        board.doMove(moveList.get(currentMoveIndex));
-        updateBoardView();
-        updateStockfishAnalysisIfRunning();
+        navigateToMove(currentMoveIndex + 1);
     }
 
     private void handleLastMove() {
         if (moveList == null || moveList.isEmpty()) return;
-        board.loadFromFen(moveList.getStartFen());
-        for (com.github.bhlangonijr.chesslib.move.Move move : moveList) {
-            board.doMove(move);
-        }
-        currentMoveIndex = moveList.size() - 1;
-        updateBoardView();
-        updateStockfishAnalysisIfRunning();
+        navigateToMove(moveList.size() - 1);
     }
+
+    private void updateNavigationButtonsState() {
+        boolean inGame = currentlyLoadedGame != null;
+        if (!inGame) {
+            firstMoveButton.setDisable(true);
+            prevMoveButton.setDisable(true);
+            nextMoveButton.setDisable(true);
+            lastMoveButton.setDisable(true);
+            return;
+        }
+
+        firstMoveButton.setDisable(currentMoveIndex < 0);
+        prevMoveButton.setDisable(currentMoveIndex < 0);
+        nextMoveButton.setDisable(currentMoveIndex >= moveList.size() - 1);
+        lastMoveButton.setDisable(currentMoveIndex >= moveList.size() - 1);
+    }
+
 }

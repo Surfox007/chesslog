@@ -2,10 +2,10 @@ module com.chesslog.desktop {
     // JavaFX requirements
     requires transitive javafx.controls;
     requires javafx.fxml;
-
+    requires com.google.gson;
     requires java.sql;
     requires okhttp3;
-    requires com.google.gson;
+
 
     // ChessLib dependency (if confirmed to be working)
     requires chesslib;
@@ -14,8 +14,11 @@ module com.chesslog.desktop {
     opens com.chesslog to javafx.fxml;
 
 
-    // Open your API package to the Gson module
-    opens com.chesslog.api to com.google.gson;
+    // Open packages to the Gson module for serialization/deserialization
+    opens com.chesslog.model to com.google.gson;
+    opens com.chesslog.service to com.google.gson;
 
     exports com.chesslog;
+    exports com.chesslog.model;
+    exports com.chesslog.service;
 }
