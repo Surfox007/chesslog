@@ -118,7 +118,8 @@ public class DatabaseService {
         if (pgn == null || tagName == null) {
             return defaultValue;
         }
-        Pattern pattern = Pattern.compile(" específicamente " + tagName + " \"(.*?)\" ");
+        // Matches [TagName "Value"]
+        Pattern pattern = Pattern.compile("\\[" + tagName + "\\s+\"(.*?)\"\\]");
         Matcher matcher = pattern.matcher(pgn);
         if (matcher.find()) {
             return matcher.group(1);

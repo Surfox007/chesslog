@@ -317,30 +317,24 @@ public class MainController {
             return;
         }
 
-        String sanMoves = "";
-        int moveTextStart = pgn.indexOf("1.");
-        if (moveTextStart != -1) {
-            sanMoves = pgn.substring(moveTextStart);
-        } else {
-            String[] lines = pgn.split("\n");
-            for (String line : lines) {
-                if (!line.startsWith("[") && line.trim().length() > 0) {
-                    sanMoves += line + "\n";
-                }
-            }
-        }
-
-        if (sanMoves.isEmpty()) {
-            showAlert("Error", "Could not parse PGN moves.", Alert.AlertType.ERROR);
-            return;
-        }
-
-        sanMoves = sanMoves.replaceAll("\\{[^}]*\\}", ""); // Remove comments
-        sanMoves = sanMoves.replace("1-0", "").replace("0-1", "").replace("1/2-1/2", "").replace("*", "").trim();
-
         try {
-            moveList.loadFromSan(sanMoves);
-            board.loadFromFen(moveList.getStartFen());
+            com.github.bhlangonijr.chesslib.pgn.PgnHolder pgnHolder = new com.github.bhlangonijr.chesslib.pgn.PgnHolder("dummy.pgn");
+            pgnHolder.loadPgn(pgn);
+
+            if (pgnHolder.getGames().isEmpty()) {
+                showAlert("Error", "No valid games found in PGN.", Alert.AlertType.ERROR);
+                return;
+            }
+
+            com.github.bhlangonijr.chesslib.game.Game game = pgnHolder.getGames().get(0);
+            this.moveList = game.getHalfMoves();
+
+            String startFen = this.moveList.getStartFen();
+            if (startFen == null || startFen.isEmpty()) {
+                startFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+            }
+            board.loadFromFen(startFen);
+
             updateBoardView();
             updateSaveStarState();
             updateMoveListArea();
