@@ -1,4 +1,4 @@
-package com.chesslog.api;
+package com.chesslog.model;
 
 import com.google.gson.annotations.SerializedName;
 

@@ -1,29 +1,31 @@
-package com.chesslog.api;
+package com.chesslog.service;
 
+import com.chesslog.model.ChessGame;
+import com.chesslog.model.MonthlyArchive;
+import com.chesslog.model.UserArchive;
 import com.google.gson.Gson;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
-import com.github.bhlangonijr.chesslib.pgn.PgnHolder; // Import PgnHolder from chesslib
-import com.github.bhlangonijr.chesslib.game.Game; // Import chesslib's Game class for parsing PGN
+import com.github.bhlangonijr.chesslib.pgn.PgnHolder; 
+import com.github.bhlangonijr.chesslib.game.Game;
 
 import java.io.IOException;
-import java.io.StringReader;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-//Service to fetch PGN archives from the Chess.com Public API using OkHttp and Gson.
+/**
+ * Service to fetch PGN archives from the Chess.com Public API using OkHttp and Gson.
+ */
 public class ChessComApiService {
 
     private final OkHttpClient client = new OkHttpClient();
     private final Gson gson = new Gson();
     private static final String API_BASE_URL = "https://api.chess.com/pub/player/";
-    private final ExecutorService executorService = Executors.newFixedThreadPool(5); // For parallel fetching
+    private final ExecutorService executorService = Executors.newFixedThreadPool(5); 
 
     public List<String> fetchArchiveUrls(String username) {
         String url = API_BASE_URL + username.toLowerCase() + "/games/archives";
@@ -85,7 +87,7 @@ public class ChessComApiService {
         }
 
         for (ChessGame chessGame : games) {
-            parsePgnMetadata(chessGame); // Populate ChessGame fields
+            parsePgnMetadata(chessGame); 
         }
 
         return games;
@@ -102,29 +104,21 @@ public class ChessComApiService {
         try {
             if (!pgnHolder.getGames().isEmpty()) {
                 Game gameFromPgn = pgnHolder.getGames().get(0);
-                System.out.println("--- Parsing PGN ---");
                 if (gameFromPgn.getRound() != null && gameFromPgn.getRound().getEvent() != null) {
                     chessGame.event = gameFromPgn.getRound().getEvent().getName();
                     chessGame.site = gameFromPgn.getRound().getEvent().getSite();
-                    System.out.println("Event: " + chessGame.event);
-                    System.out.println("Site: " + chessGame.site);
                 }
                 chessGame.date = gameFromPgn.getDate();
-                System.out.println("Date: " + chessGame.date);
 
                 if (gameFromPgn.getWhitePlayer() != null) {
                     chessGame.whitePlayerName = gameFromPgn.getWhitePlayer().getName();
-                    System.out.println("White: " + chessGame.whitePlayerName);
                 }
                 if (gameFromPgn.getBlackPlayer() != null) {
                     chessGame.blackPlayerName = gameFromPgn.getBlackPlayer().getName();
-                    System.out.println("Black: " + chessGame.blackPlayerName);
                 }
                 if (gameFromPgn.getResult() != null) {
                     chessGame.result = gameFromPgn.getResult().getDescription();
-                    System.out.println("Result: " + chessGame.result);
                 }
-                System.out.println("--------------------");
             }
         } catch (Exception e) {
             System.err.println("Error parsing PGN: " + e.getMessage());

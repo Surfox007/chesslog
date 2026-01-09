@@ -104,6 +104,221 @@
 }
 
 .move-number {
+
     -fx-font-weight: bold;
+
     -fx-fill: #333; /* Darker color for move numbers */
+
 }
+
+
+
+.move-text {
+
+
+
+    -fx-cursor: hand;
+
+
+
+    -fx-padding: 2px;
+
+
+
+}
+
+
+
+
+
+
+
+.move-text:hover {
+
+
+
+    -fx-background-color: #f0f0f0;
+
+
+
+}
+
+
+
+
+
+
+
+.current-move {
+
+    -fx-background-color: #e0e0e0;
+
+    -fx-border-radius: 3px;
+
+    -fx-background-radius: 3px;
+
+}
+
+
+
+
+
+/* Engine Moves List */
+
+.engine-moves-list {
+
+    -fx-background-color: transparent;
+
+    -fx-padding: 0;
+
+}
+
+
+
+.engine-moves-list .list-cell {
+
+    -fx-background-color: transparent;
+
+    -fx-padding: 5px;
+
+    -fx-border-color: #eee;
+
+    -fx-border-width: 0 0 1 0;
+
+}
+
+
+
+.engine-moves-list .list-cell:selected {
+
+    -fx-background-color: #f0f0f0;
+
+}
+
+
+
+.engine-score-badge {
+
+
+
+    -fx-padding: 2px 6px;
+
+
+
+    -fx-background-radius: 3px;
+
+
+
+    -fx-font-weight: bold;
+
+
+
+    -fx-font-family: "Consolas", "Monaco", monospace;
+
+
+
+    -fx-min-width: 50px;
+
+
+
+    -fx-alignment: center;
+
+
+
+}
+
+
+
+
+
+
+
+/* Animated Toggle Button */
+
+
+
+.animated-toggle-button {
+
+
+
+    -fx-background-radius: 15;
+
+
+
+    -fx-pref-width: 50px;
+
+
+
+    -fx-pref-height: 25px;
+
+
+
+    -fx-background-color: #B0B0B0; /* Grey */
+
+
+
+    -fx-text: "OFF";
+
+
+
+    -fx-text-fill: white;
+
+
+
+    -fx-alignment: CENTER_RIGHT;
+
+
+
+    -fx-padding: 0 5 0 0;
+
+
+
+    -fx-font-size: 9px;
+
+
+
+    -fx-font-weight: bold;
+
+
+
+    -fx-transition: all 0.2s ease-in-out;
+
+
+
+}
+
+
+
+
+
+
+
+.animated-toggle-button:selected {
+
+
+
+    -fx-background-color: #769656; /* Green */
+
+
+
+    -fx-text: "ON";
+
+
+
+    -fx-alignment: CENTER_LEFT;
+
+
+
+    -fx-padding: 0 0 0 5;
+
+
+
+}
+
+
+
+
+
+
+
+

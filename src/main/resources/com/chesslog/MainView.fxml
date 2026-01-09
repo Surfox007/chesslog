@@ -19,6 +19,7 @@
 <?import javafx.scene.control.ProgressBar?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.text.TextFlow?>
+<?import javafx.scene.control.ListView?>
 <SplitPane dividerPositions="0.65" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.chesslog.MainController">
     <VBox fx:id="boardContainer" alignment="CENTER" minWidth="600" maxWidth="600" spacing="10" style="-fx-padding: 10;">
         <HBox alignment="CENTER_LEFT" spacing="10">
@@ -55,30 +56,16 @@
                         <VBox alignment="TOP_CENTER" spacing="10" AnchorPane.topAnchor="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.leftAnchor="10.0" AnchorPane.bottomAnchor="10.0">
 
                             <HBox alignment="CENTER_LEFT" spacing="10">
-                                <Label text="Stockfish" style="-fx-font-weight: bold;"/>
-                                <ToggleButton fx:id="stockfishToggle"/>
+                                <Label text="Engine" style="-fx-font-weight: bold;"/>
+                                <ToggleButton fx:id="stockfishToggle" styleClass="animated-toggle-button"/>
+                                <Region HBox.hgrow="ALWAYS"/>
+                                <Label text="Depth:" styleClass="analysis-label"/>
+                                <Label fx:id="depthLabel" styleClass="evaluation-score"/>
                             </HBox>
 
-                            <VBox fx:id="analysisOutputArea" styleClass="analysis-box" spacing="5" VBox.vgrow="ALWAYS" minHeight="120">
-                                <HBox alignment="CENTER_LEFT" spacing="10">
-                                    <Label text="Evaluation:" styleClass="analysis-label"/>
-                                    <Label fx:id="evaluationLabel" styleClass="evaluation-score"/>
-                                </HBox>
-                                <HBox alignment="CENTER_LEFT" spacing="10">
-                                    <Label text="Depth:" styleClass="analysis-label"/>
-                                    <Label fx:id="depthLabel" styleClass="evaluation-score"/>
-                                </HBox>
-                                <HBox alignment="CENTER_LEFT" spacing="10">
-                                    <Label text="Best Move:" styleClass="analysis-label"/>
-                                    <Label fx:id="bestMoveLabel" styleClass="best-move"/>
-                                </HBox>
-                                <Label text="Next Moves:" styleClass="analysis-label"/>
-                                <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS">
-                                    <VBox fx:id="engineMovesVBox" spacing="2"/>
-                                </ScrollPane>
-                            </VBox>
+                            <ListView fx:id="engineMovesListView" styleClass="engine-moves-list" prefHeight="40" maxHeight="40"/>
 
-                            <ScrollPane fx:id="moveListScrollPane" styleClass="move-list-scroll-pane" fitToWidth="true" VBox.vgrow="ALWAYS" minHeight="120">
+                            <ScrollPane fx:id="moveListScrollPane" styleClass="move-list-scroll-pane" fitToWidth="true" VBox.vgrow="ALWAYS">
                                 <content>
                                     <TextFlow fx:id="moveListArea"/>
                                 </content>
@@ -89,72 +76,76 @@
                                 <Button fx:id="prevMoveButton" text="&lt;" style="-fx-font-size: 18px;"/>
                                 <Button fx:id="nextMoveButton" text="&gt;" style="-fx-font-size: 18px;"/>
                                 <Button fx:id="lastMoveButton" text="⇥" style="-fx-font-size: 18px;"/>
-
-                                                                <ToggleButton fx:id="saveStarButton" text="☆" style="-fx-font-size: 18px;"/>
+                                <ToggleButton fx:id="saveStarButton" text="☆" style="-fx-font-size: 18px;"/>
                                 <Button text="🔍" style="-fx-font-size: 18px;"/>
-                                <Button text="⟲" style="-fx-font-size: 18px;"/> </HBox>
-
-
-
-
+                                <Button text="⟲" style="-fx-font-size: 18px;"/>
+                            </HBox>
                         </VBox>
                     </AnchorPane>
                 </content>
             </Tab>
 
-            <Tab text="Load">
+            <Tab text="Collections">
                 <content>
-                    <AnchorPane>
-                        <TabPane side="TOP" tabClosingPolicy="UNAVAILABLE" AnchorPane.topAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.bottomAnchor="0.0">
-
-                            <Tab text="Your Collections">
+                    <TabPane side="TOP" tabClosingPolicy="UNAVAILABLE">
+                        <tabs>
+                            <Tab text="Games">
                                 <content>
-                                    <VBox spacing="10" style="-fx-padding: 10;">
+                                    <AnchorPane>
+                                        <TabPane side="TOP" tabClosingPolicy="UNAVAILABLE" AnchorPane.topAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.bottomAnchor="0.0">
 
-                                        <HBox alignment="CENTER_LEFT" spacing="5">
-                                            <Label text="🔍" style="-fx-font-size: 16px;"/>
-                                            <TextField fx:id="collectionSearchField" promptText="Search your saved games..." HBox.hgrow="ALWAYS"/>
-                                        </HBox>
+                                            <Tab text="Your Collections">
+                                                <content>
+                                                    <VBox spacing="10" style="-fx-padding: 10;">
 
-                                        <TableView fx:id="savedGamesTable" VBox.vgrow="ALWAYS">
-                                            <placeholder>
-                                                <Label text="No saved analyses found."/>
-                                            </placeholder>
-                                        </TableView>
+                                                        <HBox alignment="CENTER_LEFT" spacing="5">
+                                                            <Label text="🔍" style="-fx-font-size: 16px;"/>
+                                                            <TextField fx:id="collectionSearchField" promptText="Search your saved games..." HBox.hgrow="ALWAYS"/>
+                                                        </HBox>
 
-                                        <HBox alignment="CENTER_RIGHT">
-                                            <Label text="1 / 4"/> <Button text="&lt;"/>
-                                            <Button text="1"/>
-                                            <Button text="2"/>
-                                            <Button text="..."/>
-                                            <Button text="&gt;"/>
-                                        </HBox>
+                                                        <TableView fx:id="savedGamesTable" VBox.vgrow="ALWAYS">
+                                                            <placeholder>
+                                                                <Label text="No saved analyses found."/>
+                                                            </placeholder>
+                                                        </TableView>
 
-                                    </VBox>
+                                                        <HBox alignment="CENTER_RIGHT">
+                                                            <Label text="1 / 4"/> <Button text="&lt;"/>
+                                                            <Button text="1"/>
+                                                            <Button text="2"/>
+                                                            <Button text="..."/>
+                                                            <Button text="&gt;"/>
+                                                        </HBox>
+
+                                                    </VBox>
+                                                </content>
+                                            </Tab>
+
+                                            <Tab text="Import">
+                                                <content>
+                                                    <VBox spacing="10" style="-fx-padding: 10;">
+                                                        <Label text="Import Games from Chess.com User" style="-fx-font-weight: bold;"/>
+
+                                                        <HBox spacing="5" alignment="CENTER_LEFT">
+                                                            <TextField fx:id="usernameField" promptText="Enter Chess.com Username" HBox.hgrow="ALWAYS"/>
+                                                            <Button fx:id="importButton" text="Fetch Games"/>
+                                                        </HBox>
+
+                                                        <TableView fx:id="importedGamesTable" VBox.vgrow="ALWAYS">
+                                                            <placeholder>
+                                                                <Label text="Enter a username and click 'Fetch Games'."/>
+                                                            </placeholder>
+                                                        </TableView>
+
+                                                    </VBox>
+                                                </content>
+                                            </Tab>
+                                        </TabPane>
+                                    </AnchorPane>
                                 </content>
                             </Tab>
-
-                            <Tab text="Import">
-                                <content>
-                                    <VBox spacing="10" style="-fx-padding: 10;">
-                                        <Label text="Import Games from Chess.com User" style="-fx-font-weight: bold;"/>
-
-                                        <HBox spacing="5" alignment="CENTER_LEFT">
-                                            <TextField fx:id="usernameField" promptText="Enter Chess.com Username" HBox.hgrow="ALWAYS"/>
-                                            <Button fx:id="importButton" text="Fetch Games"/>
-                                        </HBox>
-
-                                        <TableView fx:id="importedGamesTable" VBox.vgrow="ALWAYS">
-                                            <placeholder>
-                                                <Label text="Enter a username and click 'Fetch Games'."/>
-                                            </placeholder>
-                                        </TableView>
-
-                                    </VBox>
-                                </content>
-                            </Tab>
-                        </TabPane>
-                    </AnchorPane>
+                        </tabs>
+                    </TabPane>
                 </content>
             </Tab>
         </TabPane>
