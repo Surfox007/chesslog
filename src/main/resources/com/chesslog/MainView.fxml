@@ -77,7 +77,7 @@
                                 <Button fx:id="nextMoveButton" text="&gt;" style="-fx-font-size: 18px;"/>
                                 <Button fx:id="lastMoveButton" text="⇥" style="-fx-font-size: 18px;"/>
                                 <ToggleButton fx:id="saveStarButton" text="☆" style="-fx-font-size: 18px;"/>
-                                <Button text="🔍" style="-fx-font-size: 18px;"/>
+                                <Button fx:id="flipBoardButton" text="🔄" style="-fx-font-size: 18px;"/>
                                 <Button text="⟲" style="-fx-font-size: 18px;"/>
                             </HBox>
                         </VBox>
@@ -104,14 +104,6 @@
                                                 <Label text="No saved analyses found."/>
                                             </placeholder>
                                         </TableView>
-
-                                        <HBox alignment="CENTER_RIGHT">
-                                            <Label text="1 / 4"/> <Button text="&lt;"/>
-                                            <Button text="1"/>
-                                            <Button text="2"/>
-                                            <Button text="..."/>
-                                            <Button text="&gt;"/>
-                                        </HBox>
 
                                     </VBox>
                                 </content>

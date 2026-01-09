@@ -54,6 +54,8 @@ public class MainController {
     @FXML private Button nextMoveButton;
     @FXML private Button lastMoveButton;
 
+    @FXML private Button flipBoardButton;
+
     @FXML private ToggleButton saveStarButton;
 
     @FXML
@@ -117,6 +119,23 @@ public class MainController {
         }
         if (lastMoveButton != null) {
             lastMoveButton.setOnAction(e -> handleLastMove());
+        }
+
+        if (flipBoardButton != null) {
+            flipBoardButton.setOnAction(e -> {
+                if (chessboard != null) {
+                    chessboard.flip();
+                    // Also swap the player info positions in the boardContainer
+                    ObservableList<javafx.scene.Node> children = boardContainer.getChildren();
+                    if (children.size() >= 3) {
+                        javafx.scene.Node topInfo = children.get(0);
+                        javafx.scene.Node bottomInfo = children.get(2);
+                        children.set(0, new Label("temp")); // Placeholder
+                        children.set(2, topInfo);
+                        children.set(0, bottomInfo);
+                    }
+                }
+            });
         }
 
         this.board = new Board();
