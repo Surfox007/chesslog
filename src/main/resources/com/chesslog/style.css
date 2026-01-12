@@ -1,0 +1,87 @@
+.animated-toggle-button {
+    -fx-background-radius: 50em;
+    -fx-min-width: 30px;
+    -fx-min-height: 30px;
+    -fx-max-width: 30px;
+    -fx-max-height: 30px;
+    -fx-pref-width: 30px;
+    -fx-pref-height: 30px;
+    -fx-background-color: #d0d0d0;
+    -fx-cursor: hand;
+    -fx-padding: 0;
+    -fx-background-insets: 0;
+    -fx-border-color: #a0a0a0;
+    -fx-border-radius: 50em;
+    -fx-border-width: 1px;
+}
+
+.animated-toggle-button:selected {
+    -fx-background-color: #769656;
+    -fx-border-color: #5a7540;
+}
+
+.animated-toggle-button:hover {
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 5, 0, 0, 1);
+}
+
+.app-logo {
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+}
+
+.analysis-label {
+    -fx-font-size: 14px;
+}
+
+.evaluation-score {
+    -fx-font-weight: bold;
+    -fx-font-size: 16px;
+}
+
+.move-list-scroll-pane {
+    -fx-background-color: #ffffff;
+    -fx-background-insets: 0;
+    -fx-border-color: #e0e0e0;
+    -fx-border-width: 1 0 0 0;
+}
+
+.move-list-scroll-pane .viewport {
+    -fx-background-color: #ffffff;
+}
+
+.move-text {
+    -fx-fill: #312e2b;
+    -fx-cursor: hand;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-font-family: "Segoe UI", Helvetica, Arial, sans-serif;
+}
+
+.move-text:hover {
+    -fx-fill: #769656;
+}
+
+.current-move {
+    -fx-fill: #ffffff;
+    -fx-font-weight: bold;
+    /* We can't easily give the Text node a background in this setup without styling its parent */
+}
+
+/* Row-level highlighting logic would be better but requires more logic in Java.
+   For now, we'll use a clear green for the active move text. */
+.current-move {
+    -fx-fill: #769656;
+}
+
+.move-number-label {
+    -fx-text-fill: #999999;
+    -fx-font-weight: normal;
+    -fx-font-size: 13px;
+}
+
+.engine-score-badge {
+    -fx-padding: 2 6 2 6;
+    -fx-background-radius: 4;
+    -fx-font-weight: bold;
+    -fx-font-size: 11px;
+}

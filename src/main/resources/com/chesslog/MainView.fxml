@@ -13,6 +13,7 @@
 <?import javafx.scene.control.TabPane?>
 <?import javafx.scene.control.Tab?>
 <?import javafx.scene.control.ToggleButton?>
+<?import javafx.scene.control.TitledPane?>
 <?import javafx.scene.control.TextArea?>
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TextField?>
@@ -71,13 +72,19 @@
                                 </content>
                             </ScrollPane>
 
+                            <TitledPane text="Analysis Notes" expanded="false">
+                                <content>
+                                    <TextArea fx:id="gameNoteArea" promptText="Enter your notes here..." wrapText="true" prefHeight="100"/>
+                                </content>
+                            </TitledPane>
+
                             <HBox alignment="CENTER" spacing="15">
                                 <Button fx:id="firstMoveButton" text="⇤" style="-fx-font-size: 18px;"/>
                                 <Button fx:id="prevMoveButton" text="&lt;" style="-fx-font-size: 18px;"/>
                                 <Button fx:id="nextMoveButton" text="&gt;" style="-fx-font-size: 18px;"/>
                                 <Button fx:id="lastMoveButton" text="⇥" style="-fx-font-size: 18px;"/>
                                 <ToggleButton fx:id="saveStarButton" text="☆" style="-fx-font-size: 18px;"/>
-                                <Button text="🔍" style="-fx-font-size: 18px;"/>
+                                <Button fx:id="flipBoardButton" text="🔄" style="-fx-font-size: 18px;"/>
                                 <Button text="⟲" style="-fx-font-size: 18px;"/>
                             </HBox>
                         </VBox>
@@ -85,67 +92,52 @@
                 </content>
             </Tab>
 
-            <Tab text="Collections">
+            <Tab text="Games">
                 <content>
-                    <TabPane side="TOP" tabClosingPolicy="UNAVAILABLE">
-                        <tabs>
-                            <Tab text="Games">
+                    <AnchorPane>
+                        <TabPane side="TOP" tabClosingPolicy="UNAVAILABLE" AnchorPane.topAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.bottomAnchor="0.0">
+
+                            <Tab text="Your Collections">
                                 <content>
-                                    <AnchorPane>
-                                        <TabPane side="TOP" tabClosingPolicy="UNAVAILABLE" AnchorPane.topAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.bottomAnchor="0.0">
+                                    <VBox spacing="10" style="-fx-padding: 10;">
 
-                                            <Tab text="Your Collections">
-                                                <content>
-                                                    <VBox spacing="10" style="-fx-padding: 10;">
+                                        <HBox alignment="CENTER_LEFT" spacing="5">
+                                            <Button fx:id="addAnalysisButton" text="+" style="-fx-font-weight: bold;"/>
+                                            <Label text="🔍" style="-fx-font-size: 16px;"/>
+                                            <TextField fx:id="collectionSearchField" promptText="Search your saved games..." HBox.hgrow="ALWAYS"/>
+                                        </HBox>
 
-                                                        <HBox alignment="CENTER_LEFT" spacing="5">
-                                                            <Label text="🔍" style="-fx-font-size: 16px;"/>
-                                                            <TextField fx:id="collectionSearchField" promptText="Search your saved games..." HBox.hgrow="ALWAYS"/>
-                                                        </HBox>
+                                        <TableView fx:id="savedGamesTable" VBox.vgrow="ALWAYS">
+                                            <placeholder>
+                                                <Label text="No saved analyses found."/>
+                                            </placeholder>
+                                        </TableView>
 
-                                                        <TableView fx:id="savedGamesTable" VBox.vgrow="ALWAYS">
-                                                            <placeholder>
-                                                                <Label text="No saved analyses found."/>
-                                                            </placeholder>
-                                                        </TableView>
-
-                                                        <HBox alignment="CENTER_RIGHT">
-                                                            <Label text="1 / 4"/> <Button text="&lt;"/>
-                                                            <Button text="1"/>
-                                                            <Button text="2"/>
-                                                            <Button text="..."/>
-                                                            <Button text="&gt;"/>
-                                                        </HBox>
-
-                                                    </VBox>
-                                                </content>
-                                            </Tab>
-
-                                            <Tab text="Import">
-                                                <content>
-                                                    <VBox spacing="10" style="-fx-padding: 10;">
-                                                        <Label text="Import Games from Chess.com User" style="-fx-font-weight: bold;"/>
-
-                                                        <HBox spacing="5" alignment="CENTER_LEFT">
-                                                            <TextField fx:id="usernameField" promptText="Enter Chess.com Username" HBox.hgrow="ALWAYS"/>
-                                                            <Button fx:id="importButton" text="Fetch Games"/>
-                                                        </HBox>
-
-                                                        <TableView fx:id="importedGamesTable" VBox.vgrow="ALWAYS">
-                                                            <placeholder>
-                                                                <Label text="Enter a username and click 'Fetch Games'."/>
-                                                            </placeholder>
-                                                        </TableView>
-
-                                                    </VBox>
-                                                </content>
-                                            </Tab>
-                                        </TabPane>
-                                    </AnchorPane>
+                                    </VBox>
                                 </content>
                             </Tab>
-                        </tabs>
-                    </TabPane>
+
+                            <Tab text="Import">
+                                <content>
+                                    <VBox spacing="10" style="-fx-padding: 10;">
+                                        <Label text="Import Games from Chess.com User" style="-fx-font-weight: bold;"/>
+
+                                        <HBox spacing="5" alignment="CENTER_LEFT">
+                                            <TextField fx:id="usernameField" promptText="Enter Chess.com Username" HBox.hgrow="ALWAYS"/>
+                                            <Button fx:id="importButton" text="Fetch Games"/>
+                                        </HBox>
+
+                                        <TableView fx:id="importedGamesTable" VBox.vgrow="ALWAYS">
+                                            <placeholder>
+                                                <Label text="Enter a username and click 'Fetch Games'."/>
+                                            </placeholder>
+                                        </TableView>
+
+                                    </VBox>
+                                </content>
+                            </Tab>
+                        </TabPane>
+                    </AnchorPane>
                 </content>
             </Tab>
         </TabPane>

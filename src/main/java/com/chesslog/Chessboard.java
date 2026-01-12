@@ -26,6 +26,7 @@ public class Chessboard extends GridPane {
     private Board board;
     private BiConsumer<Square, Square> onMoveAttempted;
     private Square selectedSquare = null;
+    private boolean flipped = false;
 
     private final StackPane[][] squarePanes = new StackPane[8][8];
     private final List<Circle> legalMoveMarkers = new ArrayList<>();
@@ -36,6 +37,11 @@ public class Chessboard extends GridPane {
 
     public void setBoard(Board board) {
         this.board = board;
+        updateBoard();
+    }
+
+    public void flip() {
+        this.flipped = !this.flipped;
         updateBoard();
     }
 
@@ -57,8 +63,15 @@ public class Chessboard extends GridPane {
 
                 squarePane.setOnMouseClicked(event -> {
                     // This maps the visual row/col to the chess Rank and File
-                    Rank rank = Rank.fromValue("RANK_" + (8 - r));
-                    File file = File.fromValue("FILE_" + (char)('A' + c));
+                    Rank rank;
+                    File file;
+                    if (flipped) {
+                        rank = Rank.fromValue("RANK_" + (r + 1));
+                        file = File.fromValue("FILE_" + (char)('H' - c));
+                    } else {
+                        rank = Rank.fromValue("RANK_" + (8 - r));
+                        file = File.fromValue("FILE_" + (char)('A' + c));
+                    }
                     Square clickedSquare = Square.encode(rank, file);
                     handleSquareClick(clickedSquare);
                 });
@@ -96,8 +109,14 @@ public class Chessboard extends GridPane {
     }
 
     private void highlightSquare(Square square, boolean highlight) {
-        int row = 7 - square.getRank().ordinal();
-        int col = square.getFile().ordinal();
+        int row, col;
+        if (flipped) {
+            row = square.getRank().ordinal();
+            col = 7 - square.getFile().ordinal();
+        } else {
+            row = 7 - square.getRank().ordinal();
+            col = square.getFile().ordinal();
+        }
         StackPane pane = squarePanes[row][col];
         Rectangle rect = (Rectangle) pane.getChildren().get(0);
 
@@ -113,8 +132,14 @@ public class Chessboard extends GridPane {
         List<Move> legalMoves = board.legalMoves();
         for (Move move : legalMoves) {
             if (move.getFrom() == from) {
-                int row = 7 - move.getTo().getRank().ordinal();
-                int col = move.getTo().getFile().ordinal();
+                int row, col;
+                if (flipped) {
+                    row = move.getTo().getRank().ordinal();
+                    col = 7 - move.getTo().getFile().ordinal();
+                } else {
+                    row = 7 - move.getTo().getRank().ordinal();
+                    col = move.getTo().getFile().ordinal();
+                }
                 StackPane pane = squarePanes[row][col];
 
                 Circle marker = new Circle(SQUARE_SIZE / 4);
@@ -151,8 +176,14 @@ public class Chessboard extends GridPane {
                 pieceLabel.setStyle("-fx-font-size: 48px;");
                 pieceLabel.setMouseTransparent(true);
 
-                int displayRow = 7 - square.getRank().ordinal();
-                int displayCol = square.getFile().ordinal();
+                int displayRow, displayCol;
+                if (flipped) {
+                    displayRow = square.getRank().ordinal();
+                    displayCol = 7 - square.getFile().ordinal();
+                } else {
+                    displayRow = 7 - square.getRank().ordinal();
+                    displayCol = square.getFile().ordinal();
+                }
 
                 GridPane.setHalignment(pieceLabel, HPos.CENTER);
                 GridPane.setValignment(pieceLabel, VPos.CENTER);

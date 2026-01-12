@@ -17,6 +17,9 @@ public class ChessGame {
     public String whitePlayerName;
     public String blackPlayerName;
     public String result;
+    
+    @SerializedName("note")
+    public String note;
 
     public String getPgn() {
         return pgn;

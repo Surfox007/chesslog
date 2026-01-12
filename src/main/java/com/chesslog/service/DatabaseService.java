@@ -48,6 +48,14 @@ public class DatabaseService {
                 """;
 
             stmt.execute(sql);
+            
+            // Attempt to add 'note' column if it doesn't exist (safe migration)
+            try {
+                stmt.execute("ALTER TABLE games ADD COLUMN note TEXT;");
+            } catch (SQLException e) {
+                // Column likely already exists, ignore
+            }
+            
             System.out.println("Database and 'games' table initialized successfully.");
 
         } catch (SQLException e) {
@@ -58,9 +66,24 @@ public class DatabaseService {
 
     public void saveGame(ChessGame game, String username) throws SQLException {
         String sql = """
-        INSERT INTO games (pgn_id, username, event, site, date, round, white, black, result, eco, termination, time_control, white_elo, black_elo, pgn)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ON CONFLICT(pgn_id) DO NOTHING;
+        INSERT INTO games (pgn_id, username, event, site, date, round, white, black, result, eco, termination, time_control, white_elo, black_elo, pgn, note)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(pgn_id) DO UPDATE SET
+            username = excluded.username,
+            event = excluded.event,
+            site = excluded.site,
+            date = excluded.date,
+            round = excluded.round,
+            white = excluded.white,
+            black = excluded.black,
+            result = excluded.result,
+            eco = excluded.eco,
+            termination = excluded.termination,
+            time_control = excluded.time_control,
+            white_elo = excluded.white_elo,
+            black_elo = excluded.black_elo,
+            pgn = excluded.pgn,
+            note = excluded.note;
         """;
 
         try (Connection conn = getConnection();
@@ -81,6 +104,7 @@ public class DatabaseService {
             pstmt.setInt(13, Integer.parseInt(parsePgnTag(game.getPgn(), "WhiteElo", "0")));
             pstmt.setInt(14, Integer.parseInt(parsePgnTag(game.getPgn(), "BlackElo", "0")));
             pstmt.setString(15, game.getPgn());
+            pstmt.setString(16, game.note);
 
             pstmt.executeUpdate();
         }
@@ -104,6 +128,7 @@ public class DatabaseService {
                 game.blackPlayerName = rs.getString("black");
                 game.result = rs.getString("result");
                 game.pgn = rs.getString("pgn");
+                game.note = rs.getString("note");
                 games.add(game);
             }
         }
@@ -118,7 +143,8 @@ public class DatabaseService {
         if (pgn == null || tagName == null) {
             return defaultValue;
         }
-        Pattern pattern = Pattern.compile(" específicamente " + tagName + " \"(.*?)\" ");
+        // Matches [TagName "Value"]
+        Pattern pattern = Pattern.compile("\\[" + tagName + "\\s+\"(.*?)\"\\]");
         Matcher matcher = pattern.matcher(pgn);
         if (matcher.find()) {
             return matcher.group(1);
