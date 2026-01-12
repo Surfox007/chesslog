@@ -7,24 +7,32 @@ import com.chesslog.service.StockfishApiService;
 import com.chesslog.service.DatabaseService;
 import com.github.bhlangonijr.chesslib.Board;
 import com.github.bhlangonijr.chesslib.move.MoveList;
+import com.github.bhlangonijr.chesslib.move.Move;
+import com.github.bhlangonijr.chesslib.Square;
+import com.github.bhlangonijr.chesslib.Piece;
+import com.github.bhlangonijr.chesslib.Side;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
+import javafx.util.Pair;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 public class MainController {
 
@@ -49,6 +57,9 @@ public class MainController {
     @FXML
     private TextFlow moveListArea;
 
+    @FXML
+    private TextArea gameNoteArea;
+
     @FXML private Button firstMoveButton;
     @FXML private Button prevMoveButton;
     @FXML private Button nextMoveButton;
@@ -57,6 +68,8 @@ public class MainController {
     @FXML private Button flipBoardButton;
 
     @FXML private ToggleButton saveStarButton;
+
+    @FXML private Button addAnalysisButton;
 
     @FXML
     private TextField collectionSearchField;
@@ -90,11 +103,15 @@ public class MainController {
     private int currentMoveIndex = -1;
     private Chessboard chessboard;
     private List<Text> moveTextNodes = new ArrayList<>();
+    private boolean isModified = false;
 
     @FXML
     public void initialize() {
         if (importButton != null) {
             importButton.setOnAction(e -> handleImportButtonAction());
+        }
+        if (addAnalysisButton != null) {
+            addAnalysisButton.setOnAction(e -> handleAddAnalysis());
         }
         if (saveStarButton != null) {
             saveStarButton.setOnAction(e -> handleSaveGame());
@@ -141,6 +158,7 @@ public class MainController {
         this.board = new Board();
         chessboard = new Chessboard();
         chessboard.setBoard(this.board);
+        chessboard.setOnMoveAttempted(this::handleUserMove);
 
         if (boardContainer != null) {
             boardContainer.getChildren().add(1, chessboard);
@@ -165,6 +183,8 @@ public class MainController {
 
         setupEngineMovesListView();
     }
+    
+    // ... (existing code for list view)
 
     private void setupEngineMovesListView() {
         if (engineMovesListView == null) return;
@@ -305,6 +325,7 @@ public class MainController {
                     ChessGame game = getTableView().getItems().get(getIndex());
                     handleDeleteGameFromCollection(game);
                 });
+                deleteBtn.setStyle("-fx-background-color: #ffcccc; -fx-text-fill: red;");
             }
 
             @Override
@@ -328,6 +349,9 @@ public class MainController {
         }
         if (whitePlayerNameLabel != null) {
             whitePlayerNameLabel.setText(gameToLoad.getWhitePlayerName());
+        }
+        if (gameNoteArea != null) {
+            gameNoteArea.setText(gameToLoad.note);
         }
 
         String pgn = currentlyLoadedGame.getPgn();
@@ -373,6 +397,8 @@ public class MainController {
         }
     }
     
+    // ... (existing updateMoveListArea, etc.)
+
     private void updateMoveListArea() {
         if (moveListArea == null || moveList == null) {
             return;
@@ -440,8 +466,10 @@ public class MainController {
         for (int i = 0; i < moveTextNodes.size(); i++) {
             Text moveText = moveTextNodes.get(i);
             moveText.getStyleClass().remove("current-move");
+            moveText.setStyle(""); // Clear inline style
             if (i == currentMoveIndex) {
                 moveText.getStyleClass().add("current-move");
+                moveText.setStyle("-fx-fill: #769656; -fx-font-weight: bold;"); // Chess.com green
 
                 // Animation idea: A simple fade transition
                 javafx.animation.FadeTransition ft = new javafx.animation.FadeTransition(javafx.util.Duration.millis(300), moveText);
@@ -485,33 +513,208 @@ public class MainController {
         }).start();
     }
 
+    private void handleAddAnalysis() {
+        this.currentlyLoadedGame = new ChessGame();
+        this.currentlyLoadedGame.url = UUID.randomUUID().toString();
+        this.currentlyLoadedGame.whitePlayerName = "White";
+        this.currentlyLoadedGame.blackPlayerName = "Black";
+        this.currentlyLoadedGame.date = java.time.LocalDate.now().toString();
+        this.currentlyLoadedGame.event = "Analysis";
+
+        this.board = new Board();
+        this.moveList = new MoveList();
+        this.currentMoveIndex = -1;
+        this.isModified = true;
+
+        if (blackPlayerNameLabel != null) blackPlayerNameLabel.setText("Black");
+        if (whitePlayerNameLabel != null) whitePlayerNameLabel.setText("White");
+        if (blackPlayerIcon != null) blackPlayerIcon.setText("⚫");
+        if (whitePlayerIcon != null) whitePlayerIcon.setText("⚪");
+        if (gameNoteArea != null) gameNoteArea.clear();
+
+        updateBoardView();
+        updateMoveListArea();
+        updateNavigationButtonsState();
+        updateSaveStarState();
+
+        if (mainTabPane != null) {
+            mainTabPane.getSelectionModel().select(0); // Switch to Analysis tab
+        }
+
+        if (isStockfishRunning.get()) {
+            analyzeCurrentPosition();
+        }
+    }
+
+    private void handleUserMove(Square from, Square to) {
+        if (board == null) return;
+
+        // Check for promotion (simple auto-queen for now)
+        Piece piece = board.getPiece(from);
+        Piece promotion = Piece.NONE;
+        if (piece == Piece.WHITE_PAWN && to.getRank() == com.github.bhlangonijr.chesslib.Rank.RANK_8) {
+            promotion = Piece.WHITE_QUEEN;
+        } else if (piece == Piece.BLACK_PAWN && to.getRank() == com.github.bhlangonijr.chesslib.Rank.RANK_1) {
+            promotion = Piece.BLACK_QUEEN;
+        }
+
+        Move move = new Move(from, to, promotion);
+
+        if (board.isMoveLegal(move, true)) {
+            // Branching Logic
+            if (currentMoveIndex < moveList.size() - 1) {
+                // Truncate moveList
+                moveList.subList(currentMoveIndex + 1, moveList.size()).clear();
+            }
+
+            board.doMove(move);
+            moveList.add(move);
+            currentMoveIndex++;
+            isModified = true;
+
+            updateBoardView();
+            updateMoveListArea();
+            updateNavigationButtonsState();
+            updateSaveStarState();
+
+            if (isStockfishRunning.get()) {
+                analyzeCurrentPosition();
+            }
+        }
+    }
+
     private void handleSaveGame() {
         if (currentlyLoadedGame == null) {
             showAlert("Save Error", "No game is currently loaded.", Alert.AlertType.WARNING);
             saveStarButton.setSelected(false);
             return;
         }
-        String username = usernameField.getText().trim();
-        if (username.isEmpty()) {
-            showAlert("Save Error", "Cannot save a game without a user context. Please fetch games for a user first.", Alert.AlertType.WARNING);
-            saveStarButton.setSelected(false);
-            return;
+
+        boolean isSaved = false;
+        try {
+            isSaved = databaseService.isGameSaved(currentlyLoadedGame.getUrl());
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
 
-        try {
-            if (databaseService.isGameSaved(currentlyLoadedGame.getUrl())) {
+        if (isModified || !isSaved) {
+            // Create a custom dialog for metadata
+            Dialog<ChessGame> dialog = new Dialog<>();
+            dialog.setTitle("Save Game");
+            dialog.setHeaderText("Enter Game Details");
+
+            ButtonType saveButtonType = new ButtonType("Save", ButtonBar.ButtonData.OK_DONE);
+            dialog.getDialogPane().getButtonTypes().addAll(saveButtonType, ButtonType.CANCEL);
+
+            GridPane grid = new GridPane();
+            grid.setHgap(10);
+            grid.setVgap(10);
+            grid.setPadding(new Insets(20, 150, 10, 10));
+
+            TextField whitePlayerField = new TextField(currentlyLoadedGame.whitePlayerName);
+            TextField blackPlayerField = new TextField(currentlyLoadedGame.blackPlayerName);
+            TextField eventField = new TextField(currentlyLoadedGame.event);
+
+            grid.add(new Label("Event:"), 0, 0);
+            grid.add(eventField, 1, 0);
+            grid.add(new Label("White:"), 0, 1);
+            grid.add(whitePlayerField, 1, 1);
+            grid.add(new Label("Black:"), 0, 2);
+            grid.add(blackPlayerField, 1, 2);
+
+            dialog.getDialogPane().setContent(grid);
+
+            // Convert the result to a ChessGame object (updating current)
+            dialog.setResultConverter(dialogButton -> {
+                if (dialogButton == saveButtonType) {
+                    currentlyLoadedGame.whitePlayerName = whitePlayerField.getText();
+                    currentlyLoadedGame.blackPlayerName = blackPlayerField.getText();
+                    currentlyLoadedGame.event = eventField.getText();
+                    if (currentlyLoadedGame.event.trim().isEmpty()) currentlyLoadedGame.event = "Analysis";
+                    
+                    if (gameNoteArea != null) {
+                        currentlyLoadedGame.note = gameNoteArea.getText();
+                    }
+                    
+                    return currentlyLoadedGame;
+                }
+                return null;
+            });
+
+            Optional<ChessGame> result = dialog.showAndWait();
+
+            if (result.isPresent()) {
+                // If it was a branching (modified) game, ensure new ID
+                if (isModified) {
+                    currentlyLoadedGame.url = UUID.randomUUID().toString();
+                }
+
+                String username = usernameField.getText().trim();
+                if (username.isEmpty()) username = "User";
+
+                try {
+                    StringBuilder pgnBuilder = new StringBuilder();
+                    pgnBuilder.append("[Event \"").append(currentlyLoadedGame.event).append("\"]\n");
+                    pgnBuilder.append("[Site \"ChessLog\"]\n");
+                    pgnBuilder.append("[Date \"").append(currentlyLoadedGame.date).append("\"]\n");
+                    pgnBuilder.append("[White \"").append(currentlyLoadedGame.whitePlayerName).append("\"]\n");
+                    pgnBuilder.append("[Black \"").append(currentlyLoadedGame.blackPlayerName).append("\"]\n");
+                    pgnBuilder.append("[Result \"*\"]\n\n");
+                    
+                    StringBuilder movesBuilder = new StringBuilder();
+                    int moveNumber = 1;
+
+                    for (int i = 0; i < moveList.size(); i++) {
+                        Move move = moveList.get(i);
+                        String moveStr = move.toString(); // Fallback (e2e4)
+                        
+                        try {
+                             String san = move.getSan();
+                             if (san != null && !san.isEmpty()) {
+                                 moveStr = san;
+                             }
+                        } catch (Exception ignored) {}
+
+                        if (i % 2 == 0) {
+                            movesBuilder.append(moveNumber).append(". ");
+                        }
+                        movesBuilder.append(moveStr).append(" ");
+                        
+                        if (i % 2 != 0) {
+                            moveNumber++;
+                        }
+                    }
+                    movesBuilder.append("*"); // Result
+
+                    pgnBuilder.append(movesBuilder.toString());
+                    currentlyLoadedGame.pgn = pgnBuilder.toString();
+
+                    databaseService.saveGame(currentlyLoadedGame, username);
+                    showAlert("Success", "Game saved successfully.", Alert.AlertType.INFORMATION);
+                    isModified = false;
+                    loadSavedGames();
+                    updateSaveStarState();
+                    
+                    if (whitePlayerNameLabel != null) whitePlayerNameLabel.setText(currentlyLoadedGame.whitePlayerName);
+                    if (blackPlayerNameLabel != null) blackPlayerNameLabel.setText(currentlyLoadedGame.blackPlayerName);
+
+                } catch (Exception e) {
+                    showAlert("Error", "Failed to save: " + e.getMessage(), Alert.AlertType.ERROR);
+                    e.printStackTrace();
+                }
+            } else {
+                updateSaveStarState();
+            }
+        } else {
+            try {
                 databaseService.deleteGame(currentlyLoadedGame.getUrl());
                 showAlert("Game Removed", "Game removed from your collection.", Alert.AlertType.INFORMATION);
-            } else {
-                databaseService.saveGame(currentlyLoadedGame, username);
-                showAlert("Success", "Game saved successfully to your collection.", Alert.AlertType.INFORMATION);
+                loadSavedGames();
+                updateSaveStarState();
+            } catch (SQLException e) {
+                showAlert("Database Error", "An error occurred: " + e.getMessage(), Alert.AlertType.ERROR);
+                e.printStackTrace();
             }
-            loadSavedGames();
-            updateSaveStarState();
-
-        } catch (SQLException e) {
-            showAlert("Database Error", "An error occurred: " + e.getMessage(), Alert.AlertType.ERROR);
-            e.printStackTrace();
         }
     }
 
